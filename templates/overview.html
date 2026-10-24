@@ -1,0 +1,63 @@
+{% extends "base.html" %}
+{% from "_macros.html" import badge %}
+{% block title %}Overview{% endblock %}
+{% block content %}
+<header class="page-head">
+  <h1>Overview</h1>
+  <p class="lede">Appointment requests and recent activity, counted live from the database.</p>
+</header>
+
+<section class="panel pipeline" aria-labelledby="pipeline-h">
+  <div class="pipeline-top">
+    <div>
+      <h2 id="pipeline-h">Request pipeline</h2>
+      <p class="muted">{{ stats.total }} appointment request{{ '' if stats.total == 1 else 's' }} in total</p>
+    </div>
+    <p class="doc-count"><strong>{{ doctor_count }}</strong> doctor{{ '' if doctor_count == 1 else 's' }} in the directory</p>
+  </div>
+  <svg class="pipeline-bar" viewBox="0 0 100 4" preserveAspectRatio="none" role="img"
+       aria-label="{{ stats.pending }} pending, {{ stats.confirmed }} confirmed, {{ stats.cancelled }} cancelled">
+    <rect class="seg-track" x="0" y="0" width="100" height="4"/>
+    {% for s in stats.segments %}{% if s.width > 0 %}<rect class="seg-{{ s.status|lower }}" x="{{ s.x }}" y="0" width="{{ s.width }}" height="4"/>{% endif %}{% endfor %}
+  </svg>
+  <dl class="pipeline-legend">
+    <div><dt><span class="dot dot-pending"></span>Pending</dt><dd>{{ stats.pending }}</dd></div>
+    <div><dt><span class="dot dot-confirmed"></span>Confirmed</dt><dd>{{ stats.confirmed }}</dd></div>
+    <div><dt><span class="dot dot-cancelled"></span>Cancelled</dt><dd>{{ stats.cancelled }}</dd></div>
+  </dl>
+</section>
+
+<div class="two-col">
+  <section class="panel" aria-labelledby="up-h">
+    <div class="panel-head"><h2 id="up-h">Upcoming requests</h2><a href="{{ url_for('main.appointment_list') }}">All appointments</a></div>
+    {% if upcoming %}
+    <div class="table-wrap"><table>
+      <thead><tr><th scope="col">When</th><th scope="col">Name</th><th scope="col">Doctor / specialty</th><th scope="col">Status</th></tr></thead>
+      <tbody>
+      {% for a in upcoming %}
+        <tr>
+          <td class="nowrap">{{ a.appointment_date|day }}<br><span class="muted">{{ a.appointment_time }}</span></td>
+          <td><a href="{{ url_for('main.appointment_detail', appointment_id=a.id) }}">{{ a.patient_name }}</a></td>
+          <td>{{ a.doctor_or_specialty }}</td>
+          <td>{{ badge(a.status) }}</td>
+        </tr>
+      {% endfor %}
+      </tbody>
+    </table></div>
+    {% else %}
+    <p class="empty">No upcoming requests. <a href="{{ url_for('main.appointment_new') }}">Create the first one.</a></p>
+    {% endif %}
+  </section>
+
+  <section class="panel" aria-labelledby="act-h">
+    <div class="panel-head"><h2 id="act-h">Recent activity</h2><a href="{{ url_for('main.activity_log') }}">Full log</a></div>
+    {% if recent %}
+    <ul class="feed">
+      {% for r in recent %}<li><span>{{ r.description }}</span><time class="muted">{{ r.created_at|ts }}</time></li>{% endfor %}
+    </ul>
+    {% else %}
+    <p class="empty">Nothing has happened yet. Actions you take will be listed here.</p>
+    {% endif %}
+  </section>
+</div>
+{% endblock %}

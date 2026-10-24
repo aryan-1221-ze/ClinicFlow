@@ -1,0 +1,59 @@
+{% extends "base.html" %}
+{% from "_macros.html" import badge, csrf, pagination with context %}
+{% block title %}Appointments{% endblock %}
+{% block content %}
+<header class="page-head row">
+  <div>
+    <h1>Appointments</h1>
+    <p class="lede">These are <strong>requests</strong> tracked by staff. Confirmed means staff marked it confirmed in this demo; nothing is booked with a real clinic.</p>
+  </div>
+  <a class="btn btn-primary" href="{{ url_for('main.appointment_new') }}">New request</a>
+</header>
+
+<form class="filters" method="get" action="{{ url_for('main.appointment_list') }}" role="search">
+  <div class="field"><label for="q">Search</label><input id="q" name="q" type="search" maxlength="100" value="{{ filters.q }}" placeholder="Name, doctor, notes"></div>
+  <div class="field"><label for="status">Status</label>
+    <select id="status" name="status"><option value="">All statuses</option>
+      {% for s in statuses %}<option value="{{ s }}" {% if filters.status == s %}selected{% endif %}>{{ s }}</option>{% endfor %}
+    </select></div>
+  <div class="field"><label for="date_from">From date</label><input id="date_from" name="date_from" type="date" value="{{ filters.date_from }}"></div>
+  <div class="field"><label for="date_to">To date</label><input id="date_to" name="date_to" type="date" value="{{ filters.date_to }}"></div>
+  <div class="filter-actions"><button class="btn" type="submit">Apply filters</button><a class="btn btn-quiet" href="{{ url_for('main.appointment_list') }}">Clear</a></div>
+</form>
+
+<section class="panel flush">
+  {% if rows %}
+  <div class="table-wrap"><table>
+    <caption class="sr">Appointment requests</caption>
+    <thead><tr><th scope="col">ID</th><th scope="col">Name</th><th scope="col">When</th><th scope="col">Doctor / specialty</th><th scope="col">Status</th><th scope="col">Actions</th></tr></thead>
+    <tbody>
+    {% for a in rows %}
+      <tr>
+        <td>#{{ a.id }}</td>
+        <td><a href="{{ url_for('main.appointment_detail', appointment_id=a.id) }}">{{ a.patient_name }}</a></td>
+        <td>{{ a.appointment_date|day }}, {{ a.appointment_time }}</td>
+        <td>{{ a.doctor_or_specialty }}</td>
+        <td>{{ badge(a.status) }}</td>
+        <td class="actions">
+          <a href="{{ url_for('main.appointment_edit', appointment_id=a.id) }}">Edit</a>
+          {% if a.status == 'Pending' %}
+          <form method="post" action="{{ url_for('main.appointment_status', appointment_id=a.id) }}" class="inline">
+            {{ csrf() }}<input type="hidden" name="status" value="Confirmed"><input type="hidden" name="next" value="{{ request.full_path }}">
+            <button class="link-btn" type="submit">Confirm</button></form>
+          {% endif %}
+          {% if a.status != 'Cancelled' %}<a href="{{ url_for('main.appointment_cancel', appointment_id=a.id) }}">Cancel</a>{% endif %}
+          <a class="danger" href="{{ url_for('main.appointment_delete', appointment_id=a.id) }}">Delete</a>
+        </td>
+      </tr>
+    {% endfor %}
+    </tbody>
+  </table></div>
+  {% else %}
+  <p class="empty">
+    {% if filters.q or filters.status or filters.date_from or filters.date_to %}No requests match these filters. <a href="{{ url_for('main.appointment_list') }}">Clear filters</a>.
+    {% else %}No appointment requests yet. <a href="{{ url_for('main.appointment_new') }}">Create a request</a> to get started.{% endif %}
+  </p>
+  {% endif %}
+</section>
+{{ pagination(meta, 'main.appointment_list') }}
+{% endblock %}

@@ -1,0 +1,57 @@
+{% extends "base.html" %}
+{% from "_macros.html" import csrf, field_error %}
+{% block title %}{{ 'Edit request #' ~ appt.id if appt else 'New appointment request' }}{% endblock %}
+{% block content %}
+<header class="page-head">
+  <h1>{{ 'Edit request #' ~ appt.id if appt else 'New appointment request' }}</h1>
+  <p class="lede">Use fictional or demonstration names only. Do not enter real patient details or medical information.</p>
+</header>
+<form class="panel form" method="post" novalidate>
+  {{ csrf() }}
+  <div class="field {% if errors.patient_name %}has-error{% endif %}">
+    <label for="patient_name">Name (fictional)</label>
+    <input id="patient_name" name="patient_name" maxlength="100" required value="{{ form.get('patient_name', '') }}"
+           {% if errors.patient_name %}aria-invalid="true" aria-describedby="patient_name-error"{% endif %}>
+    {{ field_error(errors, 'patient_name') }}
+  </div>
+  <div class="field-row">
+    <div class="field {% if errors.appointment_date %}has-error{% endif %}">
+      <label for="appointment_date">Date</label>
+      <input id="appointment_date" name="appointment_date" type="date" required value="{{ form.get('appointment_date', '') }}"
+             {% if errors.appointment_date %}aria-invalid="true" aria-describedby="appointment_date-error"{% endif %}>
+      {{ field_error(errors, 'appointment_date') }}
+    </div>
+    <div class="field {% if errors.appointment_time %}has-error{% endif %}">
+      <label for="appointment_time">Time</label>
+      <input id="appointment_time" name="appointment_time" type="time" required value="{{ form.get('appointment_time', '') }}"
+             {% if errors.appointment_time %}aria-invalid="true" aria-describedby="appointment_time-error"{% endif %}>
+      {{ field_error(errors, 'appointment_time') }}
+    </div>
+  </div>
+  <div class="field {% if errors.doctor_or_specialty %}has-error{% endif %}">
+    <label for="doctor_or_specialty">Requested doctor or specialty</label>
+    <input id="doctor_or_specialty" name="doctor_or_specialty" maxlength="100" required value="{{ form.get('doctor_or_specialty', '') }}"
+           {% if errors.doctor_or_specialty %}aria-invalid="true" aria-describedby="doctor_or_specialty-error"{% endif %}>
+    {{ field_error(errors, 'doctor_or_specialty') }}
+  </div>
+  {% if appt %}
+  <div class="field {% if errors.status %}has-error{% endif %}">
+    <label for="status">Status</label>
+    <select id="status" name="status">
+      {% for s in statuses %}<option value="{{ s }}" {% if form.get('status') == s %}selected{% endif %}>{{ s }}</option>{% endfor %}
+    </select>
+    {{ field_error(errors, 'status') }}
+  </div>
+  {% endif %}
+  <div class="field {% if errors.notes %}has-error{% endif %}">
+    <label for="notes">Administrative notes <span class="muted">(optional, 500 characters max)</span></label>
+    <textarea id="notes" name="notes" rows="4" maxlength="500"
+              {% if errors.notes %}aria-invalid="true" aria-describedby="notes-error"{% endif %}>{{ form.get('notes', '') }}</textarea>
+    {{ field_error(errors, 'notes') }}
+  </div>
+  <div class="form-actions">
+    <button class="btn btn-primary" type="submit">{{ 'Save changes' if appt else 'Save request' }}</button>
+    <a class="btn btn-quiet" href="{{ url_for('main.appointment_detail', appointment_id=appt.id) if appt else url_for('main.appointment_list') }}">Discard</a>
+  </div>
+</form>
+{% endblock %}

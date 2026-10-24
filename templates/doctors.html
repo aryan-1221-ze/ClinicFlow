@@ -1,0 +1,93 @@
+{% extends "base.html" %}
+{% from "_macros.html" import csrf, pagination with context %}
+{% block title %}Doctor Directory{% endblock %}
+{% block content %}
+<header class="page-head">
+  <h1>Doctor Directory</h1>
+  <p class="lede">Publicly listed professional contact details. The bundled sample file is fictional; real data must come from a source you are permitted to use.</p>
+</header>
+
+<section class="panel" aria-labelledby="imp-h">
+  <h2 id="imp-h">Import from CSV</h2>
+  <form class="import-form" method="post" action="{{ url_for('main.doctor_import') }}" enctype="multipart/form-data">
+    {{ csrf() }}
+    <div class="field">
+      <label for="file">CSV file (.csv, up to {{ (config.MAX_CONTENT_LENGTH / 1048576)|round(1) }} MB)</label>
+      <input id="file" name="file" type="file" accept=".csv,text/csv" required aria-describedby="imp-help">
+    </div>
+    <button class="btn btn-primary" type="submit">Validate and import</button>
+  </form>
+  <p class="muted" id="imp-help">Required columns: name, specialty, practice, city. Optional: phone, email, source, last_verified (YYYY-MM-DD). Invalid rows are skipped and reported; values are never changed. Duplicates are matched on name plus practice.</p>
+
+  {% if report %}
+  <div class="report" aria-live="polite">
+    {% if report.file_error %}
+      <div class="flash flash-error" role="alert"><strong>Import stopped.</strong> {{ report.file_error }} Nothing was imported.</div>
+    {% else %}
+      <h3>Import summary{% if report.filename %}: {{ report.filename }}{% endif %}</h3>
+      <dl class="summary">
+        <div><dt>Rows read</dt><dd>{{ report.rows_read }}</dd></div>
+        <div><dt>Imported</dt><dd>{{ report.imported }}</dd></div>
+        <div><dt>Duplicates skipped</dt><dd>{{ report.duplicates|length }}</dd></div>
+        <div><dt>Rows rejected</dt><dd>{{ report.errors|length }}</dd></div>
+      </dl>
+      {% if report.blank_rows %}<p class="muted">{{ report.blank_rows }} blank row(s) ignored.</p>{% endif %}
+      {% if report.unknown_columns %}<p class="muted">Ignored unrecognised column(s): {{ report.unknown_columns|join(', ') }}.</p>{% endif %}
+      {% if report.records %}
+        {% set gaps = report.missing_optional.items()|selectattr('1')|list %}
+        {% if gaps %}<p>Missing optional values among valid rows:
+          {% for col, n in gaps %}{{ col }} ({{ n }}){{ ', ' if not loop.last }}{% endfor %}. These were left empty.</p>{% endif %}
+      {% endif %}
+      {% if report.errors %}
+      <h4>Rejected rows</h4>
+      <div class="table-wrap"><table><thead><tr><th scope="col">Line</th><th scope="col">Problem</th></tr></thead><tbody>
+        {% for e in report.errors[:50] %}<tr><td>{{ e.line }}</td><td>{{ e.message }}</td></tr>{% endfor %}
+      </tbody></table></div>
+      {% if report.errors|length > 50 %}<p class="muted">Showing the first 50 of {{ report.errors|length }}.</p>{% endif %}
+      {% endif %}
+      {% if report.duplicates %}
+      <h4>Duplicates skipped</h4>
+      <div class="table-wrap"><table><thead><tr><th scope="col">Line</th><th scope="col">Name</th><th scope="col">Reason</th></tr></thead><tbody>
+        {% for d in report.duplicates[:50] %}<tr><td>{{ d.line or '-' }}</td><td>{{ d.name }}</td><td>{{ d.reason }}</td></tr>{% endfor %}
+      </tbody></table></div>
+      {% endif %}
+    {% endif %}
+  </div>
+  {% endif %}
+</section>
+
+<form class="filters" method="get" action="{{ url_for('main.doctor_list') }}" role="search">
+  <div class="field"><label for="q">Search name or specialty</label><input id="q" name="q" type="search" maxlength="100" value="{{ filters.q }}"></div>
+  <div class="field"><label for="specialty">Specialty</label>
+    <select id="specialty" name="specialty"><option value="">All specialties</option>
+      {% for s in specialties %}<option value="{{ s }}" {% if filters.specialty|lower == s|lower %}selected{% endif %}>{{ s }}</option>{% endfor %}</select></div>
+  <div class="field"><label for="city">City or region</label>
+    <select id="city" name="city"><option value="">All locations</option>
+      {% for c in cities %}<option value="{{ c }}" {% if filters.city|lower == c|lower %}selected{% endif %}>{{ c }}</option>{% endfor %}</select></div>
+  <div class="filter-actions"><button class="btn" type="submit">Apply filters</button><a class="btn btn-quiet" href="{{ url_for('main.doctor_list') }}">Clear</a></div>
+</form>
+
+<section class="panel flush">
+  {% if rows %}
+  <div class="table-wrap"><table>
+    <caption class="sr">Doctor directory</caption>
+    <thead><tr><th scope="col">Name</th><th scope="col">Specialty</th><th scope="col">Practice</th><th scope="col">City / region</th><th scope="col">Phone</th><th scope="col">Email</th><th scope="col">Source</th><th scope="col">Last verified</th></tr></thead>
+    <tbody>
+    {% for d in rows %}
+      <tr>
+        <td>{{ d.name }}</td><td>{{ d.specialty }}</td><td>{{ d.practice }}</td><td>{{ d.city }}</td>
+        <td>{{ d.phone or '-' }}</td><td>{{ d.email or '-' }}</td>
+        <td>{% if d.source and (d.source.startswith('http://') or d.source.startswith('https://')) %}<a href="{{ d.source }}" rel="noopener noreferrer nofollow" target="_blank">Link</a>{% else %}{{ d.source or '-' }}{% endif %}</td>
+        <td>{{ d.last_verified or 'Not recorded' }}</td>
+      </tr>
+    {% endfor %}
+    </tbody>
+  </table></div>
+  {% elif total_doctors == 0 %}
+  <p class="empty">The directory is empty. Import a CSV above. You can try <code>sample_data/doctors_sample.csv</code>.</p>
+  {% else %}
+  <p class="empty">No doctors match these filters. <a href="{{ url_for('main.doctor_list') }}">Clear filters</a>.</p>
+  {% endif %}
+</section>
+{{ pagination(meta, 'main.doctor_list') }}
+{% endblock %}

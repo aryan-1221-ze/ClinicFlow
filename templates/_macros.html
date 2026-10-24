@@ -1,0 +1,15 @@
+{% macro badge(status) %}<span class="badge badge-{{ status|lower }}">{{ status }}</span>{% endmacro %}
+
+{% macro field_error(errors, name) %}{% if errors.get(name) %}<p class="field-error" id="{{ name }}-error">{{ errors[name] }}</p>{% endif %}{% endmacro %}
+
+{% macro csrf() %}<input type="hidden" name="csrf_token" value="{{ csrf_token() }}">{% endmacro %}
+
+{% macro pagination(meta, endpoint) %}
+{% if meta.pages > 1 %}
+<nav class="pager" aria-label="Pagination">
+  {% if meta.page > 1 %}<a class="btn btn-quiet" href="{{ url_for(endpoint, **dict(request.args.to_dict(), page=meta.page - 1)) }}">Previous</a>{% endif %}
+  <span>Page {{ meta.page }} of {{ meta.pages }} ({{ meta.total }} records)</span>
+  {% if meta.page < meta.pages %}<a class="btn btn-quiet" href="{{ url_for(endpoint, **dict(request.args.to_dict(), page=meta.page + 1)) }}">Next</a>{% endif %}
+</nav>
+{% endif %}
+{% endmacro %}

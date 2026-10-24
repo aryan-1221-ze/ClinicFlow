@@ -1,0 +1,6 @@
+{% extends "base.html" %}
+{% block title %}Error {{ code }}{% endblock %}
+{% block content %}
+<header class="page-head"><h1>{{ 'Page not found' if code == 404 else 'Something went wrong' }}</h1></header>
+<section class="panel"><p>{{ message }}</p><p><a class="btn" href="{{ url_for('main.overview') }}">Go to the overview</a></p></section>
+{% endblock %}

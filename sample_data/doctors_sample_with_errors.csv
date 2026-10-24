@@ -1,0 +1,9 @@
+Doctor Name,Specialty,Clinic,Region,Phone,Email,Source URL,Last Verified
+Dr. Test Valid (Sample),Neurology,Errors Demo Clinic,Northvale,(555) 010-0201,t.valid@example.org,FICTIONAL SAMPLE DATA,2025-01-15
+Dr. Test Valid (Sample),Neurology,Errors Demo Clinic,Northvale,(555) 010-0202,,FICTIONAL SAMPLE DATA,
+,Cardiology,Errors Demo Clinic,Northvale,(555) 010-0203,,,
+Dr. Test BadEmail (Sample),Cardiology,Errors Demo Clinic,Northvale,(555) 010-0204,not-an-email,,
+Dr. Test BadDate (Sample),Cardiology,Errors Demo Clinic,Northvale,(555) 010-0205,,,15/01/2025
+Dr. Test BadPhone (Sample),Cardiology,Errors Demo Clinic,Northvale,abc,,,
+Dr. Test Extra (Sample),Cardiology,Errors Demo Clinic,Northvale,,,,,unexpected,extra
+Dr. Test Minimal (Sample),Dermatology,Errors Demo Clinic,Eastmere

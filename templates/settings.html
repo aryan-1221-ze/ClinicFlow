@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+{% from "_macros.html" import csrf %}
+{% block title %}Settings{% endblock %}
+{% block content %}
+<header class="page-head"><h1>Settings</h1></header>
+<section class="panel">
+  <h2>Clinic display name</h2>
+  <form class="form" method="post" novalidate>
+    {{ csrf() }}
+    <div class="field {% if error %}has-error{% endif %}">
+      <label for="clinic_name">Name used in drafted messages</label>
+      <input id="clinic_name" name="clinic_name" maxlength="80" required value="{{ clinic_name }}" {% if error %}aria-invalid="true" aria-describedby="clinic-error"{% endif %}>
+      {% if error %}<p class="field-error" id="clinic-error">{{ error }}</p>{% endif %}
+    </div>
+    <button class="btn btn-primary" type="submit">Save settings</button>
+  </form>
+</section>
+<section class="panel">
+  <h2>Configuration status</h2>
+  <dl class="detail">
+    <div><dt>AI service</dt><dd>{% if ai.configured %}Live: {{ ai.provider }} ({{ ai.model }}){% else %}Not configured. Fallback templates are used.{% endif %}</dd></div>
+    <div><dt>CSV upload limit</dt><dd>{{ (app_config.MAX_CONTENT_LENGTH / 1048576)|round(1) }} MB and {{ app_config.MAX_CSV_ROWS }} rows</dd></div>
+    <div><dt>Session key</dt><dd>{% if app_config.SECRET_KEY_IS_TEMPORARY %}Temporary. Set SECRET_KEY in .env so sessions survive restarts.{% else %}Set from environment{% endif %}</dd></div>
+  </dl>
+  <p class="muted">API keys are read from environment variables on the server and are never shown here.</p>
+</section>
+{% endblock %}

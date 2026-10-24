@@ -1,0 +1,63 @@
+{% extends "base.html" %}
+{% block title %}AI Assistant{% endblock %}
+{% block content %}
+<header class="page-head">
+  <h1>AI Assistant</h1>
+  <p class="lede">Drafts for routine administrative messages. Every draft needs your review. Nothing is sent automatically.</p>
+</header>
+
+<div class="notice {{ 'notice-live' if ai.configured else 'notice-fallback' }}">
+  {% if ai.configured %}
+    <strong>Live AI on:</strong> {{ ai.provider }} ({{ ai.model }}). Results are labelled when they come from the model.
+  {% else %}
+    <strong>No AI key configured.</strong> Drafts use clearly labelled fallback templates, not an AI model. See the README to set a key.
+  {% endif %}
+</div>
+<div class="notice">
+  <strong>Administrative support only.</strong> This tool gives no medical advice and makes no clinical decisions. Do not type real patient details or medical information. Phone numbers and emails are replaced with placeholders before anything leaves the server; possible medical enquiries are never sent to an AI service and are flagged for a human.
+</div>
+
+<div class="ai-grid">
+  <section class="panel" aria-labelledby="cat-h">
+    <h2 id="cat-h">Categorise an enquiry</h2>
+    <form class="ai-form form" data-endpoint="{{ url_for('main.assistant_categorize') }}" data-kind="categorize">
+      <div class="field"><label for="cat-enquiry">Enquiry text</label>
+        <textarea id="cat-enquiry" name="enquiry" rows="4" maxlength="1000" required></textarea></div>
+      <button class="btn btn-primary" type="submit">Categorise</button>
+    </form>
+    <div class="ai-result" aria-live="polite"></div>
+  </section>
+
+  <section class="panel" aria-labelledby="resp-h">
+    <h2 id="resp-h">Draft a reply</h2>
+    <form class="ai-form form" data-endpoint="{{ url_for('main.assistant_respond') }}" data-kind="reply">
+      <div class="field"><label for="resp-enquiry">Enquiry text</label>
+        <textarea id="resp-enquiry" name="enquiry" rows="4" maxlength="1000" required></textarea></div>
+      <div class="field"><label for="resp-facts">Facts to include <span class="muted">(clinic information you want stated, optional)</span></label>
+        <textarea id="resp-facts" name="facts" rows="3" maxlength="1000" placeholder="For example: Open Monday to Friday, 9:00 to 17:00."></textarea></div>
+      <button class="btn btn-primary" type="submit">Draft reply</button>
+    </form>
+    <div class="ai-result" aria-live="polite"></div>
+  </section>
+
+  <section class="panel" id="appointment-draft" aria-labelledby="appt-h">
+    <h2 id="appt-h">Draft an appointment message</h2>
+    {% if confirmed %}
+    <form class="ai-form form" data-endpoint="{{ url_for('main.assistant_appointment_message') }}" data-kind="message">
+      <div class="field"><label for="appt-id">Confirmed appointment</label>
+        <select id="appt-id" name="appointment_id" required>
+          {% for a in confirmed %}<option value="{{ a.id }}">#{{ a.id }}: {{ a.patient_name }}, {{ a.appointment_date|day }} {{ a.appointment_time }}</option>{% endfor %}
+        </select></div>
+      <div class="field"><label for="appt-kind">Message type</label>
+        <select id="appt-kind" name="kind"><option value="confirmation">Confirmation</option><option value="reminder">Reminder</option></select></div>
+      <button class="btn btn-primary" type="submit">Draft message</button>
+    </form>
+    <p class="muted">The patient name is never sent to an AI service; it is filled in locally.</p>
+    {% else %}
+    <p class="empty">No confirmed appointments to draft for. Mark a request as Confirmed on the <a href="{{ url_for('main.appointment_list') }}">Appointments</a> page first.</p>
+    {% endif %}
+    <div class="ai-result" aria-live="polite"></div>
+  </section>
+</div>
+{% endblock %}
+{% block scripts %}<script src="{{ url_for('static', filename='js/assistant.js') }}" defer></script>{% endblock %}

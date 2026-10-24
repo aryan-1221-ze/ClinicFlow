@@ -1,0 +1,19 @@
+{% extends "base.html" %}
+{% from "_macros.html" import badge, csrf %}
+{% block title %}{{ 'Cancel' if action == 'cancel' else 'Delete' }} request #{{ appt.id }}{% endblock %}
+{% block content %}
+<header class="page-head"><h1>{{ 'Cancel' if action == 'cancel' else 'Delete' }} request #{{ appt.id }}?</h1></header>
+<section class="panel confirm">
+  <p>{{ appt.patient_name }}, {{ appt.appointment_date|day }} at {{ appt.appointment_time }}, {{ appt.doctor_or_specialty }} {{ badge(appt.status) }}</p>
+  {% if action == 'cancel' %}
+  <p>The request will be marked <strong>Cancelled</strong> and kept in the list. You can reopen it later by editing it.</p>
+  {% else %}
+  <p><strong>This permanently removes the record.</strong> It cannot be undone. To keep a history, cancel the request instead.</p>
+  {% endif %}
+  <form method="post" class="form-actions">
+    {{ csrf() }}
+    <button class="btn {{ 'btn-danger' if action == 'delete' else 'btn-primary' }}" type="submit">{{ 'Cancel request' if action == 'cancel' else 'Delete permanently' }}</button>
+    <a class="btn btn-quiet" href="{{ url_for('main.appointment_detail', appointment_id=appt.id) }}">Keep request</a>
+  </form>
+</section>
+{% endblock %}
